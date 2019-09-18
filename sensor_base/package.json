@@ -1,0 +1,28 @@
+{
+  "name": "@kit-mccormick/sensor_base",
+  "version": "0.0.3",
+  "description": "APIs for managing sensors and sensor readings",
+  "types": "./dist/index.d.ts",
+  "main": "./dist/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ktm/sensor_base.git"
+  },
+  "author": "Kit McCormick",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ktm/sensor_base/issues"
+  },
+  "homepage": "https://github.com/ktm/sensor_base#readme",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "prepublish": "rm -rf dist; tsc --outDir dist"
+  },
+  "devDependencies": {
+    "@types/node": "^12.7.4",
+    "ts-node": "^8.3.0",
+    "typescript": "^3.6.2"
+  },
+  "dependencies": {}
+}

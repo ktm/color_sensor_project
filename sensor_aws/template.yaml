@@ -1,0 +1,441 @@
+Resources:
+  readingsA064D750:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      KeySchema:
+        - AttributeName: readingId
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: readingId
+          AttributeType: S
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      TableName: readings
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Metadata:
+      aws:cdk:path: AwsStack/readings/Resource
+  readingsApi02DEEFBB:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: Readings Service
+    Metadata:
+      aws:cdk:path: AwsStack/readingsApi/Resource
+  readingsApiDeploymentDE7677E960612959d22e2332d8e0d597fb3b1fa8:
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      RestApiId:
+        Ref: readingsApi02DEEFBB
+      Description: Automatically created by the RestApi construct
+    DependsOn:
+      - readingsApireadingsGET150B45C8
+      - readingsApireadingsOPTIONSC21DE844
+      - readingsApireadingsPOST27B8E9C3
+      - readingsApireadings382A9C0E
+    Metadata:
+      aws:cdk:path: AwsStack/readingsApi/Deployment/Resource
+  readingsApiDeploymentStageprod600680DD:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      RestApiId:
+        Ref: readingsApi02DEEFBB
+      DeploymentId:
+        Ref: readingsApiDeploymentDE7677E960612959d22e2332d8e0d597fb3b1fa8
+      StageName: prod
+    Metadata:
+      aws:cdk:path: AwsStack/readingsApi/DeploymentStage.prod/Resource
+  readingsApiCloudWatchRoleC9EFF38C:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+    Metadata:
+      aws:cdk:path: AwsStack/readingsApi/CloudWatchRole/Resource
+  readingsApiAccountF4B86F1B:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn:
+        Fn::GetAtt:
+          - readingsApiCloudWatchRoleC9EFF38C
+          - Arn
+    DependsOn:
+      - readingsApi02DEEFBB
+    Metadata:
+      aws:cdk:path: AwsStack/readingsApi/Account
+  readingsApireadings382A9C0E:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId:
+        Fn::GetAtt:
+          - readingsApi02DEEFBB
+          - RootResourceId
+      PathPart: readings
+      RestApiId:
+        Ref: readingsApi02DEEFBB
+    Metadata:
+      aws:cdk:path: AwsStack/readingsApi/Default/readings/Resource
+  readingsApireadingsPOST27B8E9C3:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: POST
+      ResourceId:
+        Ref: readingsApireadings382A9C0E
+      RestApiId:
+        Ref: readingsApi02DEEFBB
+      AuthorizationType: NONE
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri:
+          Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - ":apigateway:"
+              - Ref: AWS::Region
+              - :lambda:path/2015-03-31/functions/
+              - Fn::GetAtt:
+                  - createReadingFunctionFDF5F702
+                  - Arn
+              - /invocations
+    Metadata:
+      aws:cdk:path: AwsStack/readingsApi/Default/readings/POST/Resource
+  readingsApireadingsGET150B45C8:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: GET
+      ResourceId:
+        Ref: readingsApireadings382A9C0E
+      RestApiId:
+        Ref: readingsApi02DEEFBB
+      AuthorizationType: NONE
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri:
+          Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - ":apigateway:"
+              - Ref: AWS::Region
+              - :lambda:path/2015-03-31/functions/
+              - Fn::GetAtt:
+                  - getAllReadingsFunction340493EA
+                  - Arn
+              - /invocations
+    Metadata:
+      aws:cdk:path: AwsStack/readingsApi/Default/readings/GET/Resource
+  readingsApireadingsOPTIONSC21DE844:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: OPTIONS
+      ResourceId:
+        Ref: readingsApireadings382A9C0E
+      RestApiId:
+        Ref: readingsApi02DEEFBB
+      AuthorizationType: NONE
+      Integration:
+        IntegrationResponses:
+          - ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Credentials: "'false'"
+              method.response.header.Access-Control-Allow-Methods: "'OPTIONS,GET,PUT,POST,DELETE'"
+            StatusCode: "200"
+        PassthroughBehavior: NEVER
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        Type: MOCK
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Credentials: true
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "200"
+    Metadata:
+      aws:cdk:path: AwsStack/readingsApi/Default/readings/OPTIONS/Resource
+  createReadingFunctionServiceRoleA42584CD:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+    Metadata:
+      aws:cdk:path: AwsStack/createReadingFunction/ServiceRole/Resource
+  createReadingFunctionServiceRoleDefaultPolicy408FC293:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - dynamodb:BatchGetItem
+              - dynamodb:GetRecords
+              - dynamodb:GetShardIterator
+              - dynamodb:Query
+              - dynamodb:GetItem
+              - dynamodb:Scan
+              - dynamodb:BatchWriteItem
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+              - dynamodb:DeleteItem
+            Effect: Allow
+            Resource:
+              - Fn::GetAtt:
+                  - readingsA064D750
+                  - Arn
+              - Ref: AWS::NoValue
+        Version: "2012-10-17"
+      PolicyName: createReadingFunctionServiceRoleDefaultPolicy408FC293
+      Roles:
+        - Ref: createReadingFunctionServiceRoleA42584CD
+    Metadata:
+      aws:cdk:path: AwsStack/createReadingFunction/ServiceRole/DefaultPolicy/Resource
+  createReadingFunctionFDF5F702:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: createReadingFunctionCodeS3Bucket5E9C06D1
+        S3Key:
+          Fn::Join:
+            - ""
+            - - Fn::Select:
+                  - 0
+                  - Fn::Split:
+                      - "||"
+                      - Ref: createReadingFunctionCodeS3VersionKey8914D5D2
+              - Fn::Select:
+                  - 1
+                  - Fn::Split:
+                      - "||"
+                      - Ref: createReadingFunctionCodeS3VersionKey8914D5D2
+      Handler: src/controller/readingController.createHandler
+      Role:
+        Fn::GetAtt:
+          - createReadingFunctionServiceRoleA42584CD
+          - Arn
+      Runtime: nodejs10.x
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: readingsA064D750
+          PRIMARY_KEY: readingId
+    DependsOn:
+      - createReadingFunctionServiceRoleDefaultPolicy408FC293
+      - createReadingFunctionServiceRoleA42584CD
+    Metadata:
+      aws:cdk:path: AwsStack/createReadingFunction/Resource
+      aws:asset:path: /Users/ktm/src/color_sensor_project/aws/src
+      aws:asset:property: Code
+  createReadingFunctionApiPermissionAwsStackreadingsApi79FB9043POSTreadings54AE626C:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - createReadingFunctionFDF5F702
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Ref: AWS::Partition
+            - ":execute-api:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":"
+            - Ref: readingsApi02DEEFBB
+            - /
+            - Ref: readingsApiDeploymentStageprod600680DD
+            - /POST/readings
+    Metadata:
+      aws:cdk:path: AwsStack/createReadingFunction/ApiPermission.AwsStackreadingsApi79FB9043.POST..readings
+  createReadingFunctionApiPermissionTestAwsStackreadingsApi79FB9043POSTreadings0AE19239:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - createReadingFunctionFDF5F702
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Ref: AWS::Partition
+            - ":execute-api:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":"
+            - Ref: readingsApi02DEEFBB
+            - /test-invoke-stage/POST/readings
+    Metadata:
+      aws:cdk:path: AwsStack/createReadingFunction/ApiPermission.Test.AwsStackreadingsApi79FB9043.POST..readings
+  getAllReadingsFunctionServiceRoleB60CDD4A:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+    Metadata:
+      aws:cdk:path: AwsStack/getAllReadingsFunction/ServiceRole/Resource
+  getAllReadingsFunction340493EA:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: getAllReadingsFunctionCodeS3Bucket844C2D02
+        S3Key:
+          Fn::Join:
+            - ""
+            - - Fn::Select:
+                  - 0
+                  - Fn::Split:
+                      - "||"
+                      - Ref: getAllReadingsFunctionCodeS3VersionKeyB8308787
+              - Fn::Select:
+                  - 1
+                  - Fn::Split:
+                      - "||"
+                      - Ref: getAllReadingsFunctionCodeS3VersionKeyB8308787
+      Handler: src/controller/readingController.fetchAllHandler
+      Role:
+        Fn::GetAtt:
+          - getAllReadingsFunctionServiceRoleB60CDD4A
+          - Arn
+      Runtime: nodejs10.x
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: readingsA064D750
+          PRIMARY_KEY: readingId
+    DependsOn:
+      - getAllReadingsFunctionServiceRoleB60CDD4A
+    Metadata:
+      aws:cdk:path: AwsStack/getAllReadingsFunction/Resource
+      aws:asset:path: /Users/ktm/src/color_sensor_project/aws
+      aws:asset:property: Code
+  getAllReadingsFunctionApiPermissionAwsStackreadingsApi79FB9043GETreadingsBA6E7C4B:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - getAllReadingsFunction340493EA
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Ref: AWS::Partition
+            - ":execute-api:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":"
+            - Ref: readingsApi02DEEFBB
+            - /
+            - Ref: readingsApiDeploymentStageprod600680DD
+            - /GET/readings
+    Metadata:
+      aws:cdk:path: AwsStack/getAllReadingsFunction/ApiPermission.AwsStackreadingsApi79FB9043.GET..readings
+  getAllReadingsFunctionApiPermissionTestAwsStackreadingsApi79FB9043GETreadings695C9777:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - getAllReadingsFunction340493EA
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Ref: AWS::Partition
+            - ":execute-api:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":"
+            - Ref: readingsApi02DEEFBB
+            - /test-invoke-stage/GET/readings
+    Metadata:
+      aws:cdk:path: AwsStack/getAllReadingsFunction/ApiPermission.Test.AwsStackreadingsApi79FB9043.GET..readings
+  CDKMetadata:
+    Type: AWS::CDK::Metadata
+    Properties:
+      Modules: aws-cdk=1.6.1,@aws-cdk/assets=1.6.1,@aws-cdk/aws-apigateway=1.6.1,@aws-cdk/aws-applicationautoscaling=1.6.1,@aws-cdk/aws-autoscaling-common=1.6.1,@aws-cdk/aws-cloudwatch=1.6.1,@aws-cdk/aws-dynamodb=1.6.1,@aws-cdk/aws-ec2=1.6.1,@aws-cdk/aws-events=1.6.1,@aws-cdk/aws-iam=1.6.1,@aws-cdk/aws-kms=1.6.1,@aws-cdk/aws-lambda=1.6.1,@aws-cdk/aws-s3=1.6.1,@aws-cdk/aws-s3-assets=1.6.1,@aws-cdk/aws-sqs=1.6.1,@aws-cdk/aws-ssm=1.6.1,@aws-cdk/core=1.6.1,@aws-cdk/cx-api=1.6.1,@aws-cdk/region-info=1.6.1,jsii-runtime=node.js/v10.15.3
+Outputs:
+  readingsApiEndpoint3B980AA6:
+    Value:
+      Fn::Join:
+        - ""
+        - - https://
+          - Ref: readingsApi02DEEFBB
+          - .execute-api.
+          - Ref: AWS::Region
+          - "."
+          - Ref: AWS::URLSuffix
+          - /
+          - Ref: readingsApiDeploymentStageprod600680DD
+          - /
+Parameters:
+  createReadingFunctionCodeS3Bucket5E9C06D1:
+    Type: String
+    Description: S3 bucket for asset "AwsStack/createReadingFunction/Code"
+  createReadingFunctionCodeS3VersionKey8914D5D2:
+    Type: String
+    Description: S3 key for asset version "AwsStack/createReadingFunction/Code"
+  createReadingFunctionCodeArtifactHash0C8BFE34:
+    Type: String
+    Description: Artifact hash for asset "AwsStack/createReadingFunction/Code"
+  getAllReadingsFunctionCodeS3Bucket844C2D02:
+    Type: String
+    Description: S3 bucket for asset "AwsStack/getAllReadingsFunction/Code"
+  getAllReadingsFunctionCodeS3VersionKeyB8308787:
+    Type: String
+    Description: S3 key for asset version "AwsStack/getAllReadingsFunction/Code"
+  getAllReadingsFunctionCodeArtifactHashD43CA20F:
+    Type: String
+    Description: Artifact hash for asset "AwsStack/getAllReadingsFunction/Code"
+
