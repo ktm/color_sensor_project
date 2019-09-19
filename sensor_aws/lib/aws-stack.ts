@@ -2,79 +2,76 @@ import apigateway = require('@aws-cdk/aws-apigateway');
 import dynamodb = require('@aws-cdk/aws-dynamodb');
 import lambda = require('@aws-cdk/aws-lambda');
 import cdk = require('@aws-cdk/core');
+import { ReadingTableMeta } from './sensor_db';
 
 export class AwsStack extends cdk.Stack {
   constructor(app: cdk.App, id: string) {
     super(app, id);
 
-    const dynamoTable = new dynamodb.Table(this, 'readings', {
+    const readingTable = new dynamodb.Table(this, ReadingTableMeta.name, {
       partitionKey: {
-        name: 'readingId',
-        type: dynamodb.AttributeType.STRING
+        name: ReadingTableMeta.keyName,
+        type: ReadingTableMeta.keyType
       },
-      tableName: 'readings'
+      tableName: ReadingTableMeta.name
     });
 
     const api = new apigateway.RestApi(this, 'readingsApi', {
       restApiName: 'Readings Service'
     });
-    const readings = api.root.addResource('readings');
 
-    const createOne = new lambda.Function(this, 'createReadingFunction', {
+    const readingResource = api.root.addResource('readingResource');
+
+    const createOneLambda = new lambda.Function(this, 'createReadingFunction', {
       code: lambda.Code.fromAsset('src'),
       handler: 'src/controller/readingController.createHandler',
       runtime: lambda.Runtime.NODEJS_10_X,
       environment: {
-        TABLE_NAME: dynamoTable.tableName,
-        PRIMARY_KEY: 'readingId'
-      }
+        TABLE_NAME: ReadingTableMeta.name,
+        PRIMARY_KEY: ReadingTableMeta.keyName      }
     });
-    const createOneIntegration = new apigateway.LambdaIntegration(createOne);
-    readings.addMethod('POST', createOneIntegration);
 
-    const getAllLambda = new lambda.Function(this, 'getAllReadingsFunction', {
+    const getLambda = new lambda.Function(this, 'getReadingsFunction', {
       code: lambda.Code.fromAsset('.'),
-      handler: 'src/controller/readingController.fetchAllHandler',
+      handler: 'src/controller/readingController.fetchHandler',
       runtime: lambda.Runtime.NODEJS_10_X,
       environment: {
-        TABLE_NAME: dynamoTable.tableName,
-        PRIMARY_KEY: 'readingId'
+        TABLE_NAME: ReadingTableMeta.name,
+        PRIMARY_KEY: ReadingTableMeta.keyName
       }
     });
-    const getAllIntegration = new apigateway.LambdaIntegration(getAllLambda);
-    readings.addMethod('GET', getAllIntegration);
 
-    dynamoTable.grantReadWriteData(createOne);
-//    dynamoTable.grantReadData(getAllLambda);
+    const updateOneLambda = new lambda.Function(this, 'updateReadingFunction', {
+      code: new lambda.AssetCode('src'),
+      handler: 'src/controller/readingController.updateHandler',
+      runtime: lambda.Runtime.NODEJS_10_X,
+      environment: {
+        TABLE_NAME: ReadingTableMeta.name,
+        PRIMARY_KEY: ReadingTableMeta.keyName
+      }
+    });
 
-    addCorsOptions(readings);
-    /*
-        const updateOne = new lambda.Function(this, 'updateReadingFunction', {
-          code: new lambda.AssetCode('src'),
-          handler: 'controller/readingController.updateHandler',
-          runtime: lambda.Runtime.NODEJS_10_X,
-          environment: {
-            TABLE_NAME: dynamoTable.tableName,
-            PRIMARY_KEY: 'readingId'
-          }
-        });
-        dynamoTable.grantReadWriteData(updateOne);
-        const updateOneIntegration = new apigateway.LambdaIntegration(updateOne);
-        singleReading.addMethod('PUT', updateOneIntegration);
+    const deleteOneLambda = new lambda.Function(this, 'deleteReadingFunction', {
+      code: new lambda.AssetCode('src'),
+      handler: 'src/controller/readingController.deleteHandler',
+      runtime: lambda.Runtime.NODEJS_10_X,
+      environment: {
+        TABLE_NAME: ReadingTableMeta.name,
+        PRIMARY_KEY: ReadingTableMeta.keyName
+      }
+    });
 
-        const deleteOne = new lambda.Function(this, 'deleteReadingFunction', {
-          code: new lambda.AssetCode('src'),
-          handler: 'controller/reading.deleteHandler',
-          runtime: lambda.Runtime.NODEJS_10_X,
-          environment: {
-            TABLE_NAME: dynamoTable.tableName,
-            PRIMARY_KEY: 'readingId'
-          }
-        });
-        dynamoTable.grantReadWriteData(deleteOne);
-        const deleteOneIntegration = new apigateway.LambdaIntegration(deleteOne);
-        singleReading.addMethod('DELETE', updateOneIntegration);
-     */
+    readingResource.addMethod('POST', new apigateway.LambdaIntegration(createOneLambda));
+    readingResource.addMethod('GET', new apigateway.LambdaIntegration(getLambda));
+    readingResource.addMethod('PUT', new apigateway.LambdaIntegration(updateOneLambda));
+    readingResource.addMethod('DELETE', new apigateway.LambdaIntegration(deleteOneLambda));
+
+    readingTable.grantReadWriteData(createOneLambda);
+    readingTable.grantReadData(getLambda);
+    readingTable.grantReadWriteData(updateOneLambda);
+    readingTable.grantReadWriteData(deleteOneLambda);
+
+    addCorsOptions(readingResource);
   }
 }
 

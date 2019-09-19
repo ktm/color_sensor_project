@@ -1,18 +1,18 @@
-import {IReading} from "../model/reading";
+import {ColorReading} from "../model/ColorReading";
 import {APIGatewayEvent} from "aws-lambda";
 
-export function toReading(event: APIGatewayEvent): IReading {
-    let retval:IReading;
+export function toReading(event: APIGatewayEvent): ColorReading {
+    let retval:ColorReading;
 
     if ((event === null) || (event.body === null)) {
         throw new SyntaxError('toReading got a null event or event.body');
     }
 
     if (typeof event.body == 'object') {
-        retval = event.body as IReading;
+        retval = event.body as ColorReading;
     } else {
-        retval = JSON.parse(event.body) as IReading;
+        retval = JSON.parse(event.body) as ColorReading;
     }
 
-    return retval as IReading;
+    return retval as ColorReading;
 }

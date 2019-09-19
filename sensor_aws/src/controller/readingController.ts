@@ -1,6 +1,6 @@
 import {ColorReading} from "@kit-mccormick/sensor_base/lib/model/ColorReading";
 import {ColorReadingService} from "@kit-mccormick/sensor_base/lib/service/ColorReadingService";
-import {APIGatewayEvent, APIGatewayProxyEvent, Context} from "aws-lambda";
+import {APIGatewayProxyEvent, Context} from "aws-lambda";
 import {toReading} from "./Mapper";
 import {DynamoColorReadingDao} from "../repository/DynamoColorReadingDao";
 
@@ -26,14 +26,16 @@ function handleError(e:any) {
     return {statusCode: 400, body: e.message};
 }
 
-export const fetchAllHandler = async (event: APIGatewayProxyEvent, context: Context) => {
+export const fetchHandler = async (event: APIGatewayProxyEvent, context: Context) => {
     try {
-        console.error('table name: ' + TABLE_NAME);
         if (!event.body) {
-            return context.logStreamName
+            const responseObject:any = await colorReadingService.fetchAllReading();
+            return { statusCode: 200, body: responseObject };
+        } else {
+            let readingId:string = event.body;
+            const responseObject:ColorReading = await colorReadingService.fetchReading(readingId);
+            return { statusCode: 200, body: responseObject };
         }
-        const responseObject:any = await colorReadingService.fetchAllReading();
-        return { statusCode: 200, body: responseObject };
     } catch (e) {
         return handleError(e);
     }
@@ -74,20 +76,6 @@ export const deleteHandler = async (event: APIGatewayProxyEvent, context: Contex
         let deleteId:string = event.body;
         await colorReadingService.deleteReading(deleteId);
         return { statusCode: 204, body: '' };
-    } catch (e) {
-        return handleError(e);
-    }
-};
-
-export const fetchOneHandler = async (event: APIGatewayProxyEvent, context: Context) => {
-    try {
-        if (!event.body) {
-            return context.logStreamName
-        }
-        let readingId:string = event.body;
-        const responseObject:ColorReading = await colorReadingService.fetchReading(readingId);
-
-        return { statusCode: 200, body: responseObject };
     } catch (e) {
         return handleError(e);
     }

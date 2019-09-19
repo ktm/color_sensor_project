@@ -1,4 +1,4 @@
-import {GenericDao} from '@kit-mccormick/sensor_base/src/repository/GenericDao'
+import {GenericDao} from './GenericDao';
 
 const AWS = require('aws-sdk');
 const db = new AWS.DynamoDB.DocumentClient();
