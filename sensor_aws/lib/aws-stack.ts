@@ -24,7 +24,7 @@ export class AwsStack extends cdk.Stack {
 
     const createOneLambda = new lambda.Function(this, 'createReadingFunction', {
       code: lambda.Code.fromAsset('src'),
-      handler: 'src/controller/readingController.createHandler',
+      handler: 'src/controller/ReadingController.createHandler',
       runtime: lambda.Runtime.NODEJS_10_X,
       environment: {
         TABLE_NAME: ReadingTableMeta.name,
@@ -33,7 +33,7 @@ export class AwsStack extends cdk.Stack {
 
     const getLambda = new lambda.Function(this, 'getReadingsFunction', {
       code: lambda.Code.fromAsset('.'),
-      handler: 'src/controller/readingController.fetchHandler',
+      handler: 'src/controller/ReadingController.fetchHandler',
       runtime: lambda.Runtime.NODEJS_10_X,
       environment: {
         TABLE_NAME: ReadingTableMeta.name,
@@ -43,7 +43,7 @@ export class AwsStack extends cdk.Stack {
 
     const updateOneLambda = new lambda.Function(this, 'updateReadingFunction', {
       code: new lambda.AssetCode('src'),
-      handler: 'src/controller/readingController.updateHandler',
+      handler: 'src/controller/ReadingController.updateHandler',
       runtime: lambda.Runtime.NODEJS_10_X,
       environment: {
         TABLE_NAME: ReadingTableMeta.name,
@@ -53,7 +53,7 @@ export class AwsStack extends cdk.Stack {
 
     const deleteOneLambda = new lambda.Function(this, 'deleteReadingFunction', {
       code: new lambda.AssetCode('src'),
-      handler: 'src/controller/readingController.deleteHandler',
+      handler: 'src/controller/ReadingController.deleteHandler',
       runtime: lambda.Runtime.NODEJS_10_X,
       environment: {
         TABLE_NAME: ReadingTableMeta.name,
