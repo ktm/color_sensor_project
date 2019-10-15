@@ -1,41 +1,46 @@
-import {ColorReading} from "@kit-mccormick/sensor_base/lib/model/ColorReading";
-import {ColorReadingService} from "@kit-mccormick/sensor_base/lib/service/ColorReadingService";
-import {APIGatewayProxyEvent, Context} from "aws-lambda";
-import {toReading} from "./Mapper";
-import {DynamoColorReadingDao} from "../repository/DynamoColorReadingDao";
+import {APIGatewayProxyEvent, Context} from 'aws-lambda';
+import {ColorReadingService} from '../service/ColorReadingService';
+import {DynamoColorReadingDao} from '../repository/DynamoColorReadingDao';
+import {ReadingTableMeta} from '../../lib/sensor_db';
+import {ColorReading} from '../model/ColorReading';
+import {toReading} from './Mapper';
 
-const AWS = require('aws-sdk');
-const RESERVED_RESPONSE = `Error: You're using AWS reserved keywords as attributes`;
-const DYNAMODB_EXECUTION_ERROR = `Error: Execution update, caused a Dynamodb error, please take a look at your CloudWatch Logs.`;
-const TABLE_NAME = process.env.TABLE_NAME || '';
-const KEY_NAME = process.env.KEY_NAME || '';
+const TABLE_NAME = ReadingTableMeta.name || '';
+const KEY_NAME = ReadingTableMeta.keyName || '';
 
 let colorReadingDao:DynamoColorReadingDao = new DynamoColorReadingDao(TABLE_NAME, KEY_NAME);
 let colorReadingService:ColorReadingService = new ColorReadingService(colorReadingDao);
 
 function handleError(e:any) {
+    console.error(e);
+
+    if ((!e) || (typeof e !== 'object')) {
+        return {statusCode: 400, body: e};
+    }
     if (e instanceof SyntaxError) {
-        console.error(e.message);
         return {statusCode: 400, body: 'invalid request, you are missing the parameter body'};
     }
-    if (e instanceof AWS.AWSError) {
-        const errorResponse = e.code === 'ValidationException' && e.message.includes('reserved keyword') ?
-            DYNAMODB_EXECUTION_ERROR : RESERVED_RESPONSE;
-        return {statusCode: 500, body: errorResponse}
-    }
-    return {statusCode: 400, body: e.message};
+
+    return {statusCode: 400, body: e};
 }
 
-export const fetchHandler = async (event: APIGatewayProxyEvent, context: Context) => {
+export const fetchAllHandler = async (event: APIGatewayProxyEvent, context: Context) => {
+    try {
+        const data: any = await colorReadingService.fetchAllReading();
+        return {statusCode: 200, body: data};
+    } catch (e) {
+        return handleError(e);
+    }
+};
+
+export const fetchOneHandler = async (event: APIGatewayProxyEvent, context: Context) => {
     try {
         if (!event.body) {
-            const responseObject:any = await colorReadingService.fetchAllReading();
-            return { statusCode: 200, body: responseObject };
-        } else {
-            let readingId:string = event.body;
-            const responseObject:ColorReading = await colorReadingService.fetchReading(readingId);
-            return { statusCode: 200, body: responseObject };
+            return context.logStreamName
         }
+        let id:string = event.body;
+        let data: ColorReading = await colorReadingService.fetchReading(id);
+        return {statusCode: 200, body: data};
     } catch (e) {
         return handleError(e);
     }
@@ -47,10 +52,14 @@ export const createHandler = async (event: APIGatewayProxyEvent, context: Contex
             return context.logStreamName
         }
         let requestObject:ColorReading = toReading(event);
-        const responseObject:ColorReading = await colorReadingService.insertReading(requestObject);
-
-        return { statusCode: 201, body: responseObject };
+        const retval: boolean = await colorReadingService.insertReading(requestObject);
+        if (retval) {
+            return {statusCode: 201};
+        } else {
+            return {statusCode: 500, body: 'unknown error'}
+        }
     } catch (e) {
+        console.error(e);
         return handleError(e);
     }
 };
@@ -60,9 +69,9 @@ export const updateHandler = async (event: APIGatewayProxyEvent, context: Contex
         if (!event.body) {
             return context.logStreamName
         }
-        let requestObject:ColorReading = toReading(event);
+        let requestObject: ColorReading = toReading(event);
         await colorReadingService.updateReading(requestObject);
-        return { statusCode: 204, body: '' };
+        return { statusCode: 204};
     } catch (e) {
         return handleError(e);
     }
@@ -70,16 +79,15 @@ export const updateHandler = async (event: APIGatewayProxyEvent, context: Contex
 
 export const deleteHandler = async (event: APIGatewayProxyEvent, context: Context) => {
     try {
-        if (!event.body) {
-            return context.logStreamName
+        if (!event.queryStringParameters) {
+            return handleError('missing required path parameter (id)');
         }
-        let deleteId:string = event.body;
+        let deleteId:string = event.queryStringParameters['id'];
+        console.log('deleting reading[id]: ' + deleteId);
         await colorReadingService.deleteReading(deleteId);
-        return { statusCode: 204, body: '' };
+        return { statusCode: 204};
     } catch (e) {
         return handleError(e);
     }
 };
-
-
 

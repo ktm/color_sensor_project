@@ -6,5 +6,5 @@ type TableMeta =  {
     readonly keyType: AttributeType;
 }
 
-export const ReadingTableMeta: TableMeta = {name: 'reading', keyName: 'readingId', keyType: AttributeType.STRING};
-export const SensorTableMeta: TableMeta = {name: 'sensor', keyName: 'sensorId', keyType: AttributeType.STRING};
+export const ReadingTableMeta: TableMeta = {name: 'reading', keyName: 'id', keyType: AttributeType.STRING};
+export const SensorTableMeta: TableMeta = {name: 'sensor', keyName: 'id', keyType: AttributeType.STRING};

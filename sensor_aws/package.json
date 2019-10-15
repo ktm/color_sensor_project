@@ -1,16 +1,20 @@
 {
-  "name": "aws",
+  "name": "sensor_aws",
   "version": "0.1.0",
   "bin": {
     "sensor_aws": "bin/aws.js"
   },
   "scripts": {
-    "build": "tsc",
+    "clean": "tsc --build --clean; rm -f sensor_aws-*.tgz; rm -rf .aws-sam/build",
+    "build": "npm run-script clean; tsc --build",
     "watch": "tsc -w",
     "cdk": "cdk",
     "test": "mocha -r ts-node/register test/**/*.test.ts",
-    "SAM_template": "cdk synth --no-staging >template.yaml",
-    "SAM_start": "sam local start-api"
+    "integration-test": "mocha  -r ts-node/register integration-test/**/*.test.ts",
+    "SAM_template": "npm pack; cdk synth --no-staging >template.yaml",
+    "SAM_start": "sam build; sam local start-api",
+    "local_aws": "aws dynamodb create-table --endpoint-url http://localhost:8000 --table-name readings --attribute-definitions AttributeName=id,AttributeType=S --key-schema AttributeName=id,KeyType=HASH --provisioned-throughput ReadCapacityUnits=1,WriteCapacityUnits=1",
+    "local_start": "docker run -d -v \"$PWD\":/dynamodb_local_db -p 8000:8000 --name dynamodb amazon/dynamodb-local"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.31",
@@ -19,21 +23,27 @@
     "@types/node": "^12.7.4",
     "aws-cdk": "^1.6.1",
     "chai": "^4.2.0",
-    "karma-typescript": "^4.1.1",
+    "chai-http": "^4.3.0",
     "mocha": "^6.2.0",
     "ts-node": "^8.3.0",
     "typescript": "^3.6.2"
   },
   "dependencies": {
-    "@aws-cdk/core": "^1.6.1",
     "@aws-cdk/aws-apigateway": "^1.6.1",
     "@aws-cdk/aws-dynamodb": "^1.6.1",
     "@aws-cdk/aws-lambda": "^1.6.1",
-    "source-map-support": "^0.5.13",
-    "@kit-mccormick/sensor_base": "^0.0.3",
+    "@aws-cdk/core": "^1.6.1",
     "@types/chai": "^4.2.1",
     "@types/mocha": "^5.2.7",
+    "@types/uuid": "^3.4.5",
+    "@aws-sdk/client-dynamodb-node": "^0.1.0-preview.6",
     "chai": "^4.2.0",
-    "mocha": "^6.2.0"
-  }
+    "mocha": "^6.2.0",
+    "source-map-support": "^0.5.13",
+    "typescript-optional": "^2.0.1",
+    "uuid": "^3.3.3"
+  },
+  "bundleDependencies": [
+    "uuid"
+  ]
 }

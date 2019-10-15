@@ -1,57 +1,57 @@
 import {GenericDao} from './GenericDao';
+const DynamoDBX = require('aws-sdk/clients/dynamodb');
 
-const AWS = require('aws-sdk');
-const db = new AWS.DynamoDB.DocumentClient();
+export const documentClient = new DynamoDBX.DocumentClient({endpoint: 'http://172.16.123.1:8000/'});
 
 export abstract class BaseDynamoDao<T> implements GenericDao<T> {
-    private readonly tableName: string;
-    private readonly keyName: string;
 
-    constructor(tname:string, kname:string) {
+    protected tableName: string;
+    protected keyName: string;
+
+    constructor(tname: string, kname: string) {
         this.tableName = tname;
         this.keyName = kname;
     }
 
-    create(item: T): Promise<boolean> {
+    public abstract async update(item: T): Promise<boolean>;
+
+    public async delete(arg: string): Promise<boolean> {
+        const params = {
+            TableName: this.tableName,
+            Key: {
+                [this.keyName]: arg
+            }
+        };
+        console.error('begin delete ' + JSON.stringify(params));
+        await documentClient.delete(params).promise();
+        console.error('end delete ' + arg);
+        return true;
+    }
+
+    public async create(item: T): Promise<boolean> {
         const params = {
             TableName: this.tableName,
             Item: item
         };
-        return db.put(params);
+        await documentClient.put(params).promise();
+        return true;
     }
 
-    delete(id: string): Promise<boolean> {
+    public async findAll(): Promise<T[]> {
+        const result = await documentClient.scan({TableName: this.tableName}).promise();
+        return result.Items;
+    }
+
+    public async findOne(id: string): Promise<T> {
         const params = {
             TableName: this.tableName,
             Key: {
-                [this.keyName]: id
+                [this.keyName]: {
+                    "S": id
+                }
             }
         };
-        return db.delete(params);
-    }
-
-    findAl(): Promise<T[]> {
-        const params = {
-            TableName: this.tableName,
-        };
-        return db.scan(params);
-    }
-
-    findOne(id: string): Promise<T> {
-        const params = {
-            TableName: this.tableName,
-            Key: {
-                [this.keyName]: id
-            }
-        };
-        return db.get(params);
-    }
-
-    update(item: T): Promise<boolean> {
-        const params: any = {
-            TableName: this.tableName,
-            Item: item
-        };
-        return db.put(params);
+        const result = await documentClient.getItem(params).promise();
+        return result.Item;
     }
 }

@@ -1,7 +1,6 @@
-import {BaseColorReadingDao} from "../repository/BaseColorReadingDao";
-import {ColorReading} from "../model/colorReading";
-
-const uuidv4 = require('uuid/v4');
+import {BaseColorReadingDao} from '../repository/BaseColorReadingDao';
+import {ColorReading} from '../model/ColorReading';
+import {v4} from 'uuid';
 
 export class ColorReadingService {
 
@@ -11,26 +10,24 @@ export class ColorReadingService {
         this.dao = dao;
     }
 
-    public async insertReading(reading:ColorReading) {
-        reading.id = uuidv4();
-        await this.dao.create(reading);
-        return reading;
+    public async deleteReading(requestedReadingId:string): Promise<boolean> {
+        return await this.dao.delete(requestedReadingId);
     }
 
-    public async deleteReading(requestedReadingId:string) {
-        await this.dao.delete(requestedReadingId);
-        return true;
+    public fetchReading(requestedReadingId:string): Promise<ColorReading> {
+        return this.dao.findOne(requestedReadingId);
     }
 
-    public async fetchReading(requestedReadingId:string) {
-        return await this.dao.findOne(requestedReadingId);
-    }
-
-    public async fetchAllReading() {
-        return await this.dao.findAl();
-    }
-
-    public async updateReading(reading:ColorReading) {
+    public async updateReading(reading:ColorReading): Promise<boolean> {
         return await this.dao.update(reading);
+    }
+
+    public async insertReading(reading:ColorReading): Promise<boolean> {
+        reading.id = v4();
+        return await this.dao.create(reading);
+    }
+
+    public async fetchAllReading(): Promise<ColorReading[]> {
+        return await this.dao.findAll();
     }
 }

@@ -3,5 +3,6 @@ export interface ColorReading {
     rgb: number;
     lat: number;
     lng: number;
-    time: Date;
+    readTime: Date;
 }
+

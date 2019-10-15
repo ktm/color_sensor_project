@@ -1,7 +1,30 @@
-import {BaseDynamoDao} from "./BaseDynamoDao";
-import {ColorReading} from "@kit-mccormick/sensor_base/lib/model/ColorReading";
-import {BaseColorReadingDao} from "@kit-mccormick/sensor_base/lib/repository/BaseColorReadingDao";
+import {BaseDynamoDao, documentClient} from './BaseDynamoDao';
+import {ColorReading} from '../model/ColorReading'
+import {BaseColorReadingDao} from './BaseColorReadingDao';
 
 export class DynamoColorReadingDao
     extends BaseDynamoDao<ColorReading>
-    implements BaseColorReadingDao {}
+    implements BaseColorReadingDao {
+    constructor(tname: string, kname: string) {
+        super(tname, kname);
+    }
+
+    public async update(item: ColorReading): Promise<boolean> {
+        const params: any = {
+            TableName: this.tableName,
+            Key: {
+                [this.keyName]: item.id
+            },
+            UpdateExpression: "set rgb = :rgb, lat = :lat, lng = :lng, readTime = :readTime",
+            ExpressionAttributeValues: {
+                ":lat": item.lat,
+                ":lng": item.lng,
+                ":rgb": item.rgb,
+                ":readTime": item.readTime
+            }
+        };
+        console.error(JSON.stringify(params));
+        await documentClient.update(params).promise();
+        return true;
+    }
+}

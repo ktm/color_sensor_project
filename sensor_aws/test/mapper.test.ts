@@ -1,20 +1,32 @@
 import { expect } from 'chai';
 import {toReading} from '../src/controller/mapper';
-import {APIGatewayEventRequestContext, APIGatewayProxyEvent} from "aws-lambda";
-import {ColorReading} from "@kit-mccormick/sensor_base/lib/model/ColorReading";
+import {APIGatewayEventRequestContext, APIGatewayProxyEvent} from 'aws-lambda';
+import {ColorReading} from '../src/model/ColorReading';
 
 class MockEvent implements APIGatewayProxyEvent {
-    body: string | null;
+    // @ts-ignore
+    body: string;
+    // @ts-ignore
     headers: { [p: string]: string };
+    // @ts-ignore
     httpMethod: string;
+    // @ts-ignore
     isBase64Encoded: boolean;
+    // @ts-ignore
     multiValueHeaders: { [p: string]: string[] };
+    // @ts-ignore
     multiValueQueryStringParameters: { [p: string]: string[] } | null;
+    // @ts-ignore
     path: string;
+    // @ts-ignore
     pathParameters: { [p: string]: string } | null;
+    // @ts-ignore
     queryStringParameters: { [p: string]: string } | null;
+    // @ts-ignore
     requestContext: APIGatewayEventRequestContext;
+    // @ts-ignore
     resource: string;
+    // @ts-ignore
     stageVariables: { [p: string]: string } | null;
 }
 
@@ -33,7 +45,7 @@ describe('mapper', function() {
             rgb: 102,
             lat: 99.000,
             lng: 98.222,
-            time: nowTime
+            readTime: nowTime
         };
         event.body = JSON.stringify(reading);
         let val: ColorReading = toReading(event);
@@ -42,6 +54,6 @@ describe('mapper', function() {
         expect(val.rgb === 102);
         expect(val.lat === 99.000);
         expect(val.lng === 98.222);
-        expect(val.time === nowTime);
+        expect(val.readTime === nowTime);
     });
 });
