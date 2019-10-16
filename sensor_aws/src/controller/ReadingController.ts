@@ -1,14 +1,15 @@
 import {APIGatewayProxyEvent, Context} from 'aws-lambda';
 import {ColorReadingService} from '../service/ColorReadingService';
-import {DynamoColorReadingDao} from '../repository/DynamoColorReadingDao';
+import {DynamoColorReadingDao} from '../repository/dynamo/DynamoColorReadingDao';
 import {ReadingTableMeta} from '../../lib/sensor_db';
 import {ColorReading} from '../model/ColorReading';
 import {toReading} from './Mapper';
+import {BaseColorReadingDao} from "../repository/BaseColorReadingDao";
 
 const TABLE_NAME = ReadingTableMeta.name || '';
 const KEY_NAME = ReadingTableMeta.keyName || '';
 
-let colorReadingDao:DynamoColorReadingDao = new DynamoColorReadingDao(TABLE_NAME, KEY_NAME);
+let colorReadingDao:BaseColorReadingDao = new DynamoColorReadingDao(TABLE_NAME, KEY_NAME);
 let colorReadingService:ColorReadingService = new ColorReadingService(colorReadingDao);
 
 function handleError(e:any) {
@@ -59,7 +60,6 @@ export const createHandler = async (event: APIGatewayProxyEvent, context: Contex
             return {statusCode: 500, body: 'unknown error'}
         }
     } catch (e) {
-        console.error(e);
         return handleError(e);
     }
 };
@@ -83,7 +83,6 @@ export const deleteHandler = async (event: APIGatewayProxyEvent, context: Contex
             return handleError('missing required path parameter (id)');
         }
         let deleteId:string = event.queryStringParameters['id'];
-        console.log('deleting reading[id]: ' + deleteId);
         await colorReadingService.deleteReading(deleteId);
         return { statusCode: 204};
     } catch (e) {

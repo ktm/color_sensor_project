@@ -1,4 +1,4 @@
-import {GenericDao} from './GenericDao';
+import {GenericDao} from '../GenericDao';
 const DynamoDBX = require('aws-sdk/clients/dynamodb');
 
 export const documentClient = new DynamoDBX.DocumentClient({endpoint: 'http://172.16.123.1:8000/'});
@@ -22,9 +22,7 @@ export abstract class BaseDynamoDao<T> implements GenericDao<T> {
                 [this.keyName]: arg
             }
         };
-        console.error('begin delete ' + JSON.stringify(params));
         await documentClient.delete(params).promise();
-        console.error('end delete ' + arg);
         return true;
     }
 

@@ -1,6 +1,6 @@
 import {BaseDynamoDao, documentClient} from './BaseDynamoDao';
-import {ColorReading} from '../model/ColorReading'
-import {BaseColorReadingDao} from './BaseColorReadingDao';
+import {ColorReading} from '../../model/ColorReading'
+import {BaseColorReadingDao} from '../BaseColorReadingDao';
 
 export class DynamoColorReadingDao
     extends BaseDynamoDao<ColorReading>
@@ -23,7 +23,6 @@ export class DynamoColorReadingDao
                 ":readTime": item.readTime
             }
         };
-        console.error(JSON.stringify(params));
         await documentClient.update(params).promise();
         return true;
     }
