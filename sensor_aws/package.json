@@ -21,7 +21,7 @@
     "@types/chai": "^4.2.1",
     "@types/mocha": "^5.2.7",
     "@types/node": "^12.7.4",
-    "aws-cdk": "^1.6.1",
+    "aws-cdk": "^1.174.0",
     "chai": "^4.2.0",
     "chai-http": "^4.3.0",
     "mocha": "^6.2.0",
