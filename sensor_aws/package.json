@@ -24,7 +24,7 @@
     "aws-cdk": "^1.6.1",
     "chai": "^4.2.0",
     "chai-http": "^4.3.0",
-    "mocha": "^6.2.0",
+    "mocha": "^10.2.0",
     "ts-node": "^8.3.0",
     "typescript": "^3.6.2"
   },
@@ -38,7 +38,7 @@
     "@types/uuid": "^3.4.5",
     "@aws-sdk/client-dynamodb-node": "^0.1.0-preview.6",
     "chai": "^4.2.0",
-    "mocha": "^6.2.0",
+    "mocha": "^10.2.0",
     "source-map-support": "^0.5.13",
     "typescript-optional": "^2.0.1",
     "uuid": "^3.3.3"
